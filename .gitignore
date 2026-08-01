@@ -4,6 +4,7 @@ dset/*
 dset_out/*
 *.pickle
 *.pdf
+./mnt/*
 
 
 ####### Default Git Ignore (Python) #######
