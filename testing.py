@@ -3,26 +3,47 @@ import pandas as pd
 import tifffile
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import torch
+from datetime import datetime
+from scipy.signal import convolve2d
+import cv2
 
-#img = tifffile.imread(r"dset/CCPs/cell1/SR1.tif")
-#flat_data = img.flatten()
-#print(flat_data.shape)
-#df = pd.DataFrame(columns=["Brightness"],data=flat_data)
-#grp = df.groupby("Brightness").count()
-#vmin = np.percentile(img, 1)
-#vmax = np.percentile(img, 99)
-#print(vmin)
-#print(vmax)
-#plt.imshow(img, vmin=vmin, vmax=vmax)
-#plt.legend()
-#plt.colorbar(label="intensity")
-#plt.show()
 
-val1 = np.random.rand(2,2)
-val2 = np.random.rand(2,2)
+class ImgTransform():
+    def __init__(self, name):
+        self.name = name
+    # change the brightness by a scaling value
+    # shift the image by a specified angle
 
-val1 = torch.from_numpy(val1)
-val2 = torch.from_numpy(val2)
+    def transformation(self, img, bright_shift=0, rot=0):
+        img *= bright_shift
+        rot_matrix = cv2.getRotationMatrix2D(
+            (len(img/2), len(img[0])/2), rot, 1)
+        img = cv2.warpAffine(img, rot_matrix, img.shape)
+        return img
 
-print(torch.dist(val1,val2,2))
+
+class VFlip(ImgTransform):
+    def __init__(self, name):
+        super(VFlip, self).__init__(name)
+
+    def transformation(self, img, bright_shift=0, rot=0):
+        img = np.flipud(img)
+        img = super(VFlip, self).transformation(img, bright_shift, rot)
+        return img
+
+
+flip_transform = VFlip("vflip")
+
+img = tifffile.imread(r"dset\CCPs\cell1\WF_raw.tif")
+img = img.astype('uint32')
+img = img.mean(axis=0)
+transform = flip_transform.transformation(np.copy(img), 1.2, 25)
+norm = mpl.colors.LogNorm(img.min(), img.max())
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+axes[0].imshow(img, cmap='grey', norm=norm)
+axes[0].set_title("og mean")
+axes[1].imshow(transform, cmap='grey', norm=norm)
+axes[1].set_title("Transformation")
+plt.show()
