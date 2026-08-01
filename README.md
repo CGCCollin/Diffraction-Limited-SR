@@ -12,3 +12,5 @@ Ensure you have a copy of the extracted dataset.</br>
 Extract each inteneral folder, and place it into ./dset</br>
 Run code as desired (running data-prep first.)</br>
 Enjoy!</br>
+Note you need to run data_prep first, (adjusting paths as needed)</br>
+then run the model script.</br>
